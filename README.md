@@ -2,6 +2,8 @@ env:
 colab
 https://colab.research.google.com/github/class177/Exercise_2.4/blob/main/HW2_4.ipynb
 
+
+generate_real_samples_with_labels_Rayleigh API:
 def generate_real_samples_with_labels_Rayleigh(h_dataset, number=100):
     """
     Generate real (labeled) samples for training the CGAN.
