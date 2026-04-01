@@ -1,37 +1,56 @@
-# Exercise 2.4: Channel GAN Implementation
+def generate_real_samples_with_labels_Rayleigh(h_dataset, number=100):
+    """
+    Generate real (labeled) samples for training the CGAN.
+    
+    Steps:
+        1. 隨機從 h_dataset 抽取通道係數 h。
+        2. 為每個樣本隨機產生 16QAM symbol。
+        3. 模擬通道輸出 y = h*x + n，其中 n 為高斯雜訊。
+        4. 建立 conditioning 向量 [Re(x), Im(x), Re(h), Im(h)] / 3。
 
-This repository provides the starter code for Exercise 2.4. Your task is to implement the data generation function for a **Conditional Generative Adversarial Network (CGAN)** that simulates a Rayleigh fading channel. The goal is to learn the channel distribution without explicit channel state information (CSI).
+    Args:
+        h_dataset: 1-D array-like, 含有複數通道係數 h_siso。
+        number: 要產生的樣本數。
 
-## Experiment Setup
+    Returns:
+        received_data: shape = (number, 2)，每列為 [Re(y), Im(y)]。
+        conditioning:  shape = (number, 4)，每列為 [Re(x), Im(x), Re(h), Im(h)] / 3。
+    """
+    # 1. 隨機選 h（複數 Rayleigh 通道係數）
+    h_complex = np.random.choice(h_dataset, size=number, replace=True)  # shape: (number,)
+    h_r = np.real(h_complex)
+    h_i = np.imag(h_complex)
 
-The script is set up to train a CGAN using a pre-generated dataset of channel coefficients:
+    # 2. 產生隨機 16QAM symbol（使用全域的 mean_set_QAM）
+    #    隨機挑 index，然後從 mean_set_QAM 取對應 symbol
+    symbol_idx = np.random.randint(low=0, high=len(mean_set_QAM), size=number)
+    x_complex = mean_set_QAM[symbol_idx]  # shape: (number,)
+    x_r = np.real(x_complex)
+    x_i = np.imag(x_complex)
 
-*   **Dataset:** `rayleigh_channel_dataset.mat` (generated via QuaDRiGa)
-*   **Model Architecture:** Conditional GAN (Generator + Discriminator)
-*   **Input Dimension ($Z$):** 16 (Noise vector)
-*   **Constructed Features:** Received Signal $y$, Conditioning Vector (Pilot/Label info)
-*   **Training Steps:** 750,000 iterations
+    # 3. 通道輸出 y = h * x + n
+    #    先計算 h*x
+    y_complex = h_complex * x_complex  # shape: (number,)
 
-## What You Need to Do
+    #    加上高斯雜訊（和你繪圖區使用的雜訊模型一致）
+    noise = np.random.multivariate_normal(
+        mean=[0, 0],
+        cov=[[0.03, 0], [0, 0.03]],
+        size=number
+    ).astype(np.float32)
+    # y 的實部、虛部
+    y_r = np.real(y_complex)
+    y_i = np.imag(y_complex)
 
-| Checklist  | Details                                                                                                                                                                                                                                                                                                                                   |
-| :--------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Code**   | Open `Exercise_2.4_starter.py` and locate the `generate_real_samples_with_labels_Rayleigh` function. You need to implement:<br> 1. random selection of channel coefficients ($h$);<br> 2. generation of random QAM symbols ($x$);<br> 3. simulation of received signal ($y = hx + n$);<br> 4. construction of the conditioning vector. |
-| **Data**   | Ensure `rayleigh_channel_dataset.mat` is present in the directory. You can generate it using the provided MATLAB script `QuaDRiGa_channel_generator.m`.                                                                                                                                                                                   |
-| **Run**    | Execute: `python Exercise_2.4_starter.py`                                                                                                                                                                                                                                                                                                 |
-| **Observe** | The script saves generated plots in the `ChannelGAN_Rayleigh_images` folder and model checkpoints in `Models/`.                                                                                                                                                                                                                           |
+    #    把雜訊加進去
+    y_r_noisy = y_r + noise[:, 0]
+    y_i_noisy = y_i + noise[:, 1]
 
-> **Hint:**
->
-> *   Use `np.random.choice` to sample from the dataset.
-> *   Remember that the received signal $y$ contains both real and imaginary parts.
-> *   The conditioning vector typically concatenates the transmitted symbol information (real/imag) and the channel information (real/imag), properly normalized.
+    # 4. 建構輸出與 conditioning
+    # received_data: [Re(y), Im(y)]
+    received_data = np.stack([y_r_noisy, y_i_noisy], axis=1).astype(np.float32)
 
-## Files
+    # conditioning: [Re(x), Im(x), Re(h), Im(h)] / 3
+    conditioning = np.stack([x_r, x_i, h_r, h_i], axis=1).astype(np.float32) / 3.0
 
-| File                             | Purpose                                                                                |
-| :------------------------------- | :------------------------------------------------------------------------------------- |
-| `Exercise_2.4_starter.py`        | Starter script (with **TODO**).                                                        |
-| `QuaDRiGa_channel_generator.m`   | MATLAB script to generate the `rayleigh_channel_dataset.mat` dataset using QuaDRiGa.   |
-| `rayleigh_channel_dataset.mat`   | (Generated) The dataset required for training.                                         |
-| `QuaDRiGa-main.zip`              | QuaDRiGa library (if needed for generation).                                           |
+    return received_data, conditioning
