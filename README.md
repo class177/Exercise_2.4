@@ -109,7 +109,7 @@
 
 (b) Use the GAN-based framework to model the MIMO channel you generated in 2.4(a).
 
-result image out:
+result image out:(b)result image(ChannelGAN_MIMO) folder
 
 console out:
 Loaded h_dataset shape = (2, 4, 20000)
