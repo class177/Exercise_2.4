@@ -1,0 +1,6 @@
+model_checkpoint_path: "ChannelGAN_model_step_20000.ckpt"
+all_model_checkpoint_paths: "ChannelGAN_model_step_16000.ckpt"
+all_model_checkpoint_paths: "ChannelGAN_model_step_17000.ckpt"
+all_model_checkpoint_paths: "ChannelGAN_model_step_18000.ckpt"
+all_model_checkpoint_paths: "ChannelGAN_model_step_19000.ckpt"
+all_model_checkpoint_paths: "ChannelGAN_model_step_20000.ckpt"
