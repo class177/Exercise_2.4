@@ -108,6 +108,7 @@
 
 
 (b) Use the GAN-based framework to model the MIMO channel you generated in 2.4(a).
+training by colab:https://github.com/class177/Exercise_2.4/blob/main/HW2_4.ipynb
 
 result image out:(b)result image(ChannelGAN_MIMO) folder
 
